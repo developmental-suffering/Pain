@@ -1,35 +1,47 @@
-name: Pain
+name: Sync QuestCraft Repo
 
 on:
-  push:
-    branches: [ "main" ]
+  workflow_dispatch: # Allows manual trigger from the Actions tab
+  schedule:
+    - cron: '0 0 * * 0' # Optional: Runs automatically every Sunday at midnight
 
 jobs:
-  cloud-compile:
+  clone-and-commit:
     runs-on: ubuntu-latest
+    
     steps:
-    # 1. Pull your master repo environment
-    - name: Checkout Master Repository
-      uses: actions/checkout@v4
+      # Step 1: Checkout your destination repository
+      - name: Checkout destination repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    # 2. Cloud Clone the Official Java Backend Core
-    - name: Clone Pojlib Core
-      run: git clone https://github.com/QuestCraftPlusPlus/Pojlib.git
+      # Step 2: Clone the QuestCraft repository into a temporary folder
+      - name: Checkout QuestCraft source repository
+        uses: actions/checkout@v4
+        with:
+          repository: 'QuestCraftPlusPlus/QuestCraft' # Adjust if using a different specific organization/repo
+          path: 'temp-questcraft'
 
-    # 3. Cloud Clone the Official GUI Environment Shell
-    - name: Clone XR Wrapper GUI
-      run: git clone https://github.com/QuestCraftPlusPlus/QCXR-XR-Wrapper.git
+      # Step 3: Copy the folders into your repository root and remove temp files
+      - name: Copy QuestCraft files
+        run: |
+          # Copy everything except hidden .git metadata from the source
+          rsync -av --exclude='.git' temp-questcraft/ ./
+          
+          # Clean up temporary clone directory
+          rm -rf temp-questcraft
 
-    # 4. Spin up the Java 21 Compiler
-    - name: Setup Java Environment
-      uses: actions/setup-java@v4
-      with:
-        java-version: '21'
-        distribution: 'temurin'
-
-    # 5. Compile the Pojlib Core natively alongside the GUI layout paths
-    - name: Compile Pojlib Core
-      run: |
-        cd Pojlib
-        chmod +x gradlew
-        ./gradlew assembleRelease
+      # Step 4: Commit and push changes if updates were detected
+      - name: Commit and push changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add .
+          if git diff --staged --quiet; then
+            echo "No changes detected to commit."
+          else
+            git commit -m "Automated sync: Updated QuestCraft repository contents"
+            git push
+          fi
