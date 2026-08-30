@@ -6,12 +6,10 @@ jobs:
     name: Request manual activation file
     runs-on: ubuntu-latest
     steps:
-      # Use the modern unified builder repository to request the hardware profile
+      # Targets the explicit active workflow runner path
       - name: Request manual activation file
         id: getManualLicenseFile
-        uses: game-ci/unity-actions@v4
-        with:
-          action: "request-activation-file"
+        uses: game-ci/unity-request-activation-file@v3
 
       - name: Expose as artifact
         uses: actions/upload-artifact@v4
