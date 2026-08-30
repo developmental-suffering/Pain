@@ -1,47 +1,53 @@
-name: Sync QuestCraft Repo
+name: Sync QuestCraft Repositories
 
 on:
-  workflow_dispatch: # Allows manual trigger from the Actions tab
+  workflow_dispatch: # Manual run trigger
   schedule:
-    - cron: '0 0 * * 0' # Optional: Runs automatically every Sunday at midnight
+    - cron: '0 0 * * 0' # Optional: Syncs weekly on Sunday at midnight
 
 jobs:
   clone-and-commit:
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Checkout your destination repository
+      # Step 1: Checkout your repository
       - name: Checkout destination repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 2: Clone the QuestCraft repository into a temporary folder
-      - name: Checkout QuestCraft source repository
+      # Step 2: Clone the UI / Wrapper Repository
+      - name: Checkout QuestCraft UI Repo
         uses: actions/checkout@v4
         with:
-          repository: 'QuestCraftPlusPlus/QuestCraft' # Adjust if using a different specific organization/repo
-          path: 'temp-questcraft'
+          repository: 'QuestCraftPlusPlus/QCXR-XR-Wrapper' # Or 'QuestCraftPlusPlus/Launcher'
+          path: 'questcraft-ui'
+          submodules: 'recursive'
 
-      # Step 3: Copy the folders into your repository root and remove temp files
-      - name: Copy QuestCraft files
+      # Step 3: Clone the Minecraft Backend Repository
+      - name: Checkout QuestCraft Engine/Pojlib Repo
+        uses: actions/checkout@v4
+        with:
+          repository: 'QuestCraftPlusPlus/Pojlib'
+          path: 'questcraft-backend'
+          submodules: 'recursive'
+
+      # Step 4: Strip out inner .git folders so they save as actual files instead of broken git submodules
+      - name: Prepare folders for commit
         run: |
-          # Copy everything except hidden .git metadata from the source
-          rsync -av --exclude='.git' temp-questcraft/ ./
-          
-          # Clean up temporary clone directory
-          rm -rf temp-questcraft
+          rm -rf questcraft-ui/.git
+          rm -rf questcraft-backend/.git
 
-      # Step 4: Commit and push changes if updates were detected
+      # Step 5: Commit and push both folders to your repository
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
           
-          git add .
+          git add questcraft-ui questcraft-backend
           if git diff --staged --quiet; then
             echo "No changes detected to commit."
           else
-            git commit -m "Automated sync: Updated QuestCraft repository contents"
+            git commit -m "Automated sync: Pulled latest QuestCraft UI and Backend code"
             git push
           fi
