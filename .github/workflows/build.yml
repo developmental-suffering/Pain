@@ -1,44 +1,46 @@
 name: Sync QuestCraft Repositories
 
 on:
-  workflow_dispatch: # Manual run trigger
+  workflow_dispatch:
   schedule:
-    - cron: '0 0 * * 0' # Optional: Syncs weekly on Sunday at midnight
+    - cron: '0 0 * * 0'
 
 jobs:
   clone-and-commit:
     runs-on: ubuntu-latest
     
     steps:
-      # Step 1: Checkout your repository
       - name: Checkout destination repository
         uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # Step 2: Clone the UI / Wrapper Repository
+      # Step 2: Clone UI Repo with LFS enabled
       - name: Checkout QuestCraft UI Repo
         uses: actions/checkout@v4
         with:
-          repository: 'QuestCraftPlusPlus/QCXR-XR-Wrapper' # Or 'QuestCraftPlusPlus/Launcher'
+          repository: 'QuestCraftPlusPlus/QCXR-XR-Wrapper'
           path: 'questcraft-ui'
           submodules: 'recursive'
+          lfs: true
 
-      # Step 3: Clone the Minecraft Backend Repository
+      # Step 3: Clone Backend Repo with LFS enabled
       - name: Checkout QuestCraft Engine/Pojlib Repo
         uses: actions/checkout@v4
         with:
           repository: 'QuestCraftPlusPlus/Pojlib'
           path: 'questcraft-backend'
           submodules: 'recursive'
+          lfs: true
 
-      # Step 4: Strip out inner .git folders so they save as actual files instead of broken git submodules
-      - name: Prepare folders for commit
+      # Step 4: Remove inner git references and set LFS fallback config
+      - name: Prepare folders and Git LFS settings
         run: |
           rm -rf questcraft-ui/.git
           rm -rf questcraft-backend/.git
+          git config --global lfs.allowincompletepush true
 
-      # Step 5: Commit and push both folders to your repository
+      # Step 5: Commit and push changes
       - name: Commit and push changes
         run: |
           git config --global user.name "github-actions[bot]"
