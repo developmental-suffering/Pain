@@ -1,0 +1,35 @@
+name: Pain
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  cloud-compile:
+    runs-on: ubuntu-latest
+    steps:
+    # 1. Pull your master repo environment
+    - name: Checkout Master Repository
+      uses: actions/checkout@v4
+
+    # 2. Cloud Clone the Official Java Backend Core
+    - name: Clone Pojlib Core
+      run: git clone https://github.com/QuestCraftPlusPlus/Pojlib.git
+
+    # 3. Cloud Clone the Official GUI Environment Shell
+    - name: Clone XR Wrapper GUI
+      run: git clone https://github.com/QuestCraftPlusPlus/QCXR-XR-Wrapper.git
+
+    # 4. Spin up the Java 21 Compiler
+    - name: Setup Java Environment
+      uses: actions/setup-java@v4
+      with:
+        java-version: '21'
+        distribution: 'temurin'
+
+    # 5. Compile the Pojlib Core natively alongside the GUI layout paths
+    - name: Compile Pojlib Core
+      run: |
+        cd Pojlib
+        chmod +x gradlew
+        ./gradlew assembleRelease
