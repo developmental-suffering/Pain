@@ -1,23 +1,19 @@
-name: Get Unity License File
-
-on:
-  workflow_dispatch: # Allows you to run this manually from the UI
+name: Acquire activation file
+on: [workflow_dispatch]
 
 jobs:
-  requestLicense:
-    name: Request Manual Activation File
+  activation:
+    name: Request manual activation file
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      # Step 1: Request manual activation file from modern Game-CI tool
+      - name: Request manual activation file
+        id: getManualLicenseFile
+        uses: game-ci/unity-request-activation-file@v4
 
-      - name: Request Activation File
-        id: getFile
-        # Using game-ci tool to pull the raw machine fingerprint
-        uses: game-ci/unity-request-activation-file@v2
-
-      - name: Upload Fingerprint File
+      # Step 2: Expose the file as a downloadable GitHub artifact
+      - name: Expose as artifact
         uses: actions/upload-artifact@v4
         with:
           name: Unity-Activation-File
-          path: ${{ steps.getFile.outputs.filePath }}
+          path: ${{ steps.getManualLicenseFile.outputs.filePath }}
