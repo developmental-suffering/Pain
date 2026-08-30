@@ -1,9 +1,7 @@
 package pojlib;
 
 import android.content.Context;
-
 import com.google.gson.Gson;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -110,29 +108,20 @@ public class APIHandler {
         return new Gson().fromJson(postRaw(url + parseQueries(query), body.toString()), tClass);
     }
 
+    // Retained for structural references, though network calls to it are bypassed below
     public static final String SUPPORTED_VERSIONS = "https://raw.githubusercontent.com/QuestCraftPlusPlus/Pojlib/refs/heads/" + Constants.GIT_BRANCH + "/supportedVersions.json";
 
     public static String[] getQCSupportedVersions(Context ctx) {
-        File versionsJson = new File(Constants.USER_HOME + "/supportedVersions.json");
-        if(API.hasConnection(ctx)) {
-            try {
-                DownloadUtils.downloadFile(SUPPORTED_VERSIONS, versionsJson);
-            } catch (IOException e) {
-                Logger.getInstance().appendToLog("Error while grabbing supported versions!\n" + e);
-            }
-        } else {
-            Logger.getInstance().appendToLog("Skipping supported versions download.");
-        }
+        // Log local sequence tracking
+        Logger.getInstance().appendToLog("Bypassing external version lists. Forcing local offline release configuration.");
 
         DownloadManager.reset();
-        SupportedVersions versions = GsonUtils.jsonFileToObject(versionsJson.getAbsolutePath(), SupportedVersions.class);
-        if(versions == null) {
-            return new String[] {
-                    "1.21.4"
-            };
-        }
-
-        return versions.supportedVersions;
+        
+        // Directly supply your explicit targeted version array. 
+        // This ensures the launcher menu matches your manifest expectations exactly.
+        return new String[] {
+                "1.21.4"
+        };
     }
 
     public static class SupportedVersions {
