@@ -6,12 +6,13 @@ jobs:
     name: Request manual activation file
     runs-on: ubuntu-latest
     steps:
-      # Step 1: Request manual activation file from modern Game-CI tool
+      # Use the modern unified builder repository to request the hardware profile
       - name: Request manual activation file
         id: getManualLicenseFile
-        uses: game-ci/unity-request-activation-file@v4
+        uses: game-ci/unity-actions@v4
+        with:
+          action: "request-activation-file"
 
-      # Step 2: Expose the file as a downloadable GitHub artifact
       - name: Expose as artifact
         uses: actions/upload-artifact@v4
         with:
